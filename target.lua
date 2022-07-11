@@ -9,7 +9,7 @@ function target:new(n)
 	self[n].rad = 1
 	self[n].state = 'active'
 	self[n].x = math.random(maxRad, w - maxRad)
-	self[n].y = math.random(maxRad + ScoreY + love.graphics.getFont():getHeight(), h - maxRad)
+	self[n].y = math.random(maxRad + scoreY + love.graphics.getFont():getHeight(), h - maxRad)
 end
 
 function target:draw()
@@ -34,6 +34,7 @@ function target:draw()
 	end
 end
 
+
 function target:update(m, dt)
 	if self[m].radInc == true then
         self[m].rad = self[m].rad + speed * dt
@@ -48,31 +49,32 @@ function target:update(m, dt)
 	if self[m].rad <= 0 then
 		self[m].state = 'eliminated'
 		targetsEliminated = targetsEliminated + 1
-		MissAudio:play()
-		Lives = Lives - 1
+		missAudio:play()
+		lives = lives - 1
 
-		if Lives ~= 0 then
+		if lives ~= 0 then
 			targetIndex = targetIndex + 1
 			target:new(targetIndex)
 		else
 			totalPlayTime = totalPlayTime + playTime
-			avgTime = Try == 1 and 'N|A' or string.format('%.1f', totalPlayTime / Try)..'s'
-			accuracy = ((Score == 0) and (Miss == 0)) and 'N|A' or string.format('%.1f', (Score / (Score + Miss)) * 100)..'%'
-			GameState = 'over'
+			avgTime = try == 1 and 'N|A' or string.format('%.1f', totalPlayTime / try)..'s'
+			accuracy = ((score == 0) and (misses == 0)) and 'N|A' or string.format('%.1f', (score / (score + misses)) * 100)..'%'
+			gameState = 'over'
 		end
 	end
 end
 
+
 function target:mousepressed(x, y, button)
 	targetDetected = false
 
-	if GameState == 'play' and button == 1 then
+	if gameState == 'play' and button == 1 then
 		for i = targetIndex, 1, -1 do
 			if self[i].state == 'active' and targetDetected == false then
 				local mouse_to_target = distance(x, y, self[i].x, self[i].y)
 				if mouse_to_target <= self[i].rad then
-					Score = Score + 1
-					ScoreAudio:play()
+					score = score + 1
+					scoreAudio:play()
 					targetDetected = true
 					targetIndex = targetIndex + 1
 					target:new(targetIndex)
@@ -81,8 +83,8 @@ function target:mousepressed(x, y, button)
 				end
 			end
 			if i == 1 and targetDetected == false then
-				MisclickAudio:play()
-				Miss = Miss + 1
+				misclickAudio:play()
+				misses = misses + 1
 			end
 		end
 	end
