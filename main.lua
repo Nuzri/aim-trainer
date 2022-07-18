@@ -1,17 +1,17 @@
 require 'target'
 require 'menu-button'
+require 'scoreboard-h'
+require 'scoreboard-v'
 
 function love.load()
 	love.filesystem.setIdentity('aim-trainer')
 	math.randomseed(os.time())
 
 	--cursor
-	---@diagnostic disable-next-line: missing-parameter
     local cursorImg = love.graphics.newImage('gfx/cursor.png')
     cursor = love.mouse.newCursor('gfx/cursor.png', cursorImg:getWidth() / 2, cursorImg:getHeight() / 2)
 
 	--images
-    ---@diagnostic disable-next-line: missing-parameter
     heart = love.graphics.newImage('gfx/heart.png')
 
 	--fonts
@@ -25,13 +25,12 @@ function love.load()
     misclickAudio = love .audio.newSource('sounds/misclick.mp3', 'static')
     buttonAudio = love.audio.newSource('sounds/button-press.wav', 'static')
 
-
-	--initialising variables
+	--declaring variables
 	w, h = love.graphics.getDimensions()
 	initLineWidth = love.graphics.getLineWidth()
 	gameState = 'start'
 	score = 0
-	highscore = 0
+	best = 0
 	lives = 3
 	misses = 0
 	try = 0
@@ -47,8 +46,7 @@ function love.load()
 	transparent = {1, 1, 1, 0}
 	orange = {1.00000000000, 0.34117647059, 0.13333333333}
 
-
-	--initialise menu buttons
+	--initialising menu buttons
 	startMenuButton =
 	newMenuButton({'start game', 'sound', 'quit'},
 	{function()
@@ -71,8 +69,8 @@ function love.load()
 	gameOverMenuButton =
 	newMenuButton({'play again', 'sound', 'quit'},
     {function ()
-		if score > highscore then
-			highscore = score
+		if score > best then
+			best = score
 		end
 		buttonAudio:play()
     	score = 0
@@ -143,12 +141,12 @@ function love.draw()
 		love.graphics.setLineWidth(initLineWidth)
 
 		target:draw()
-		drawHearts()
+		hearts()
 
 		playTime = string.format('%.1f', (love.timer.getTime() - initPlayTime))
 
 		love.graphics.setFont(smallFont)
-		scoreboardHorizontal({"Hits: ", "Highscore: ", "Time: "}, {score, highscore, playTime.."s"}, 60, 5, 0, white, orange)
+		scoreboardH({"Hits: ", "Best: ", "Time: "}, {score, best, playTime.."s"}, 60, 5, 0, white, orange)
 
 	elseif gameState == "over" then
 		love.graphics.setLineWidth(initLineWidth)
@@ -163,10 +161,10 @@ function love.draw()
 		love.graphics.printf('Stats:', 0, 70, w, 'center')
 
 		love.graphics.setFont(love.graphics.newFont('fonts/Poppins-Regular.ttf', 22))
-		scoreboardVertical({'Hit Targets:', 'Accuracy:', 'Avg. Time:'}, {score.."/"..targetIndex, accuracy, avgTime}, 0, (w / 2) - ((buttonWidth - 37) / 2), 115, buttonWidth - 37, white, orange)
+		scoreboardV({'Hit Targets:', 'Accuracy:', 'Speed:'}, {score.."/"..targetIndex, accuracy, string.format('%.1f', targetIndex / playTime)..' t/s'}, 0, (w / 2) - ((buttonWidth - 37) / 2), 115, buttonWidth - 37, white, orange)
 
 		love.graphics.setFont(smallFont)
-		scoreboardHorizontal({"Hits: ", "Highscore: ", "Time: "}, {score, highscore, playTime.."s"}, 60, 5, 0, white, orange)
+		scoreboardH({"Hits: ", "Best: ", "Time: "}, {score, best, playTime.."s"}, 60, 5, 0, white, orange)
 
 		love.graphics.setFont(mediumFont)
 		gameOverMenuButton:draw()
@@ -175,15 +173,19 @@ end
 
 
 function love.mousepressed(x, y, button)
-	if gameState == 'play' then
+	if gameState == 'start' then
+		startMenuButton:mousepressed(button)
+	elseif gameState == 'play' then
 		target:mousepressed(x, y, button)
+	elseif gameState == 'over' then
+		gameOverMenuButton:mousepressed(button)
 	end
 end
 
 
 function love.keypressed(key)
 	if key=="rctrl" then
-		debug.debug() -- game crashes
+		debug.debug() --game freezes
 	end
 end
 
@@ -193,37 +195,7 @@ function distance(x1, y1, x2, y2)
 end
 
 
-function scoreboardVertical(leftColumn, rightColumn, gap, x, y, width, leftTextColor, rightTextColor)
-	local fontHeight = love.graphics.getFont():getHeight()
-	for i = 1, #leftColumn do
-		love.graphics.setColor(leftTextColor[1], leftTextColor[2], leftTextColor[3], leftTextColor[4])
-		love.graphics.print(leftColumn[i], x, y + ((i - 1) * (fontHeight +gap)))
-
-		love.graphics.setColor(rightTextColor[1], rightTextColor[2], rightTextColor[3], rightTextColor[4])
-		love.graphics.print(rightColumn[i], x + width - (love.graphics.getFont():getWidth(rightColumn[i])), y + ((i - 1) * (fontHeight + gap)))
-	end
-end
-
-
-function scoreboardHorizontal(left, right, gap, x, y, leftTextColor, rightTextColor)
-	for i = 1, #left do
-		X = 0
-		for j = 1, i do
-			if j ~= 1 then
-				X = X + love.graphics.getFont():getWidth(left[j - 1])
-			end
-		end
-
-		love.graphics.setColor(leftTextColor[1], leftTextColor[2], leftTextColor[3])
-		love.graphics.print(left[i], x + X + gap * (i - 1), y)
-
-		love.graphics.setColor(rightTextColor[1], rightTextColor[2], rightTextColor[3])
-		love.graphics.print(right[i], x + X + gap * (i - 1) + love.graphics.getFont():getWidth(left[i]), y)
-	end
-end
-
-
-function drawHearts()
+function hearts()
 	local heartWidth = heart:getWidth()
     local heartPadding = 5
 
