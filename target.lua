@@ -56,9 +56,9 @@ function target:update(m, dt)
 			targetIndex = targetIndex + 1
 			target:new(targetIndex)
 		else
-			totalPlayTime = totalPlayTime + playTime
-			avgTime = try == 1 and 'N|A' or string.format('%.1f', totalPlayTime / try)..'s'
-			accuracy = ((score == 0) and (misses == 0)) and 'N|A' or string.format('%.1f', (score / (score + misses)) * 100)..'%'
+			--[[totalPlayTime = totalPlayTime + playTime
+			avgTime = try == 1 and 'N|A' or string.format('%.1f', totalPlayTime / try)..'s']]
+			accuracy = ((score == 0) and (misses == 0)) and '--' or string.format('%.1f', (score / (score + misses)) * 100)..'%'
 			gameState = 'over'
 		end
 	end
